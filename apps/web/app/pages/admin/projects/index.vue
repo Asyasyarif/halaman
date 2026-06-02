@@ -13,7 +13,7 @@
       <n-card v-for="project in projects" :key="project.id" class="project-card">
         <template #header>
           <div class="project-card__header">
-            <span class="project-icon">📁</span>
+            <PhFolder :size="20" weight="regular" />
             <span>{{ project.name }}</span>
           </div>
         </template>
@@ -44,6 +44,8 @@
 </template>
 
 <script setup lang="ts">
+import { PhFolder } from '@phosphor-icons/vue'
+
 definePageMeta({ layout: 'admin', middleware: ['auth'] })
 
 const showCreate = ref(false)

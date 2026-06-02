@@ -38,7 +38,7 @@
                   :title="btn.label"
                   @click="btn.action"
                 >
-                  {{ btn.icon }}
+                  <component :is="btn.icon" :size="18" weight="regular" />
                 </button>
               </div>
               <div class="tiptap-content">
@@ -80,6 +80,8 @@
 </template>
 
 <script setup lang="ts">
+import { PhTextB, PhTextItalic, PhTextHOne, PhLink, PhImage, PhCode } from '@phosphor-icons/vue'
+
 definePageMeta({ layout: 'admin', middleware: ['auth'] })
 
 const route = useRoute()
@@ -108,12 +110,12 @@ const publishOptions = [
 ]
 
 const toolbarButtons = [
-  { label: 'Bold', icon: 'B', action: () => {} },
-  { label: 'Italic', icon: 'I', action: () => {} },
-  { label: 'Heading', icon: 'H', action: () => {} },
-  { label: 'Link', icon: '🔗', action: () => {} },
-  { label: 'Image', icon: '🖼️', action: () => {} },
-  { label: 'Code', icon: '&lt;&gt;', action: () => {} },
+  { label: 'Bold', icon: PhTextB, action: () => {} },
+  { label: 'Italic', icon: PhTextItalic, action: () => {} },
+  { label: 'Heading', icon: PhTextHOne, action: () => {} },
+  { label: 'Link', icon: PhLink, action: () => {} },
+  { label: 'Image', icon: PhImage, action: () => {} },
+  { label: 'Code', icon: PhCode, action: () => {} },
 ]
 
 function autosave() {

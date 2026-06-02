@@ -19,7 +19,7 @@
             <n-input v-model:value="newPage.slug" placeholder="getting-started" />
           </n-form-item>
           <n-form-item label="Icon">
-            <n-input v-model:value="newPage.icon" placeholder="📄" />
+            <n-input v-model:value="newPage.icon" placeholder="PhFile or emoji" />
           </n-form-item>
           <n-button type="primary" block :loading="creating" @click="handleCreate">Create</n-button>
         </n-form>

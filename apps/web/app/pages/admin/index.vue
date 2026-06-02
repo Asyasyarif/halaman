@@ -34,7 +34,11 @@
       <ul v-else class="recent-list">
         <li v-for="page in stats.recentPages" :key="page.id" class="recent-item">
           <NuxtLink :to="`/admin/projects/${page.projectId}/editor/${page.id}`" class="recent-link">
-            <span class="recent-icon">{{ statusIcon(page.status) }}</span>
+            <span class="recent-icon">
+              <PhCheckCircle v-if="page.status === 'published'" :size="20" weight="regular" />
+              <PhPencilSimple v-else-if="page.status === 'draft'" :size="20" weight="regular" />
+              <PhArchive v-else :size="20" weight="regular" />
+            </span>
             <span class="recent-body">
               <span class="recent-title">{{ page.title }}</span>
               <span class="recent-meta">
@@ -52,6 +56,8 @@
 </template>
 
 <script setup lang="ts">
+import { PhCheckCircle, PhPencilSimple, PhArchive } from '@phosphor-icons/vue'
+
 definePageMeta({ layout: 'admin', middleware: ['auth'] })
 
 const { user } = useAuth()
@@ -82,13 +88,6 @@ const statCards = computed(() => [
 
 function projectName(id: string) {
   return projects.value.find((p) => p.id === id)?.name ?? 'Project'
-}
-
-function statusIcon(status: string) {
-  if (status === 'published') return '✓'
-  if (status === 'draft') return '✎'
-  if (status === 'archived') return '◌'
-  return '·'
 }
 
 function formatRelative(iso: string) {

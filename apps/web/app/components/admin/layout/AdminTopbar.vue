@@ -11,7 +11,8 @@
 
     <div class="admin-topbar__right">
       <n-button text @click="toggleTheme">
-        <n-icon><span class="action-icon">{{ isDark ? '☀️' : '🌙' }}</span></n-icon>
+        <PhSun v-if="isDark" :size="20" weight="regular" />
+        <PhMoon v-else :size="20" weight="regular" />
       </n-button>
       <n-dropdown :options="userMenuOptions" @select="handleUserMenu">
         <n-button text>
@@ -23,6 +24,8 @@
 </template>
 
 <script setup lang="ts">
+import { PhSun, PhMoon } from '@phosphor-icons/vue'
+
 const { user, logout } = useAuth()
 const colorMode = useColorMode()
 const isDark = computed(() => colorMode.value === 'dark')
@@ -63,6 +66,7 @@ async function handleUserMenu(key: string) {
   padding: 0 var(--space-6);
   background: var(--bg-primary);
   border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
 }
 
 .admin-topbar__left {
@@ -74,10 +78,6 @@ async function handleUserMenu(key: string) {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-}
-
-.action-icon {
-  font-size: 18px;
 }
 
 .user-avatar {

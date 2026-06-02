@@ -10,7 +10,10 @@
         :class="{ 'page-tree__row--active': selectedId === page.id }"
         @click="emit('select', page.id)"
       >
-        <span class="page-tree__icon">{{ page.icon || '📄' }}</span>
+        <span class="page-tree__icon">
+          <span v-if="!page.icon">{{ defaultIcon }}</span>
+          <span v-else>{{ page.icon }}</span>
+        </span>
         <span class="page-tree__title">{{ page.title }}</span>
         <span class="page-tree__badge" :class="`page-tree__badge--${page.status}`">
           {{ page.status }}
@@ -29,6 +32,11 @@
 </template>
 
 <script setup lang="ts">
+import { h } from 'vue'
+import { PhFile } from '@phosphor-icons/vue'
+
+const defaultIcon = h(PhFile, { size: 18, weight: 'regular' })
+
 interface PageItem {
   id: string
   title: string

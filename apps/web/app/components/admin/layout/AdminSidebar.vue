@@ -10,16 +10,16 @@
     <nav class="admin-sidebar__nav">
       <div class="nav-section">
         <div v-if="!collapsed" class="nav-section__label">Workspace</div>
-        <NuxtLink to="/admin" class="nav-item" active-class="nav-item--active" :exact-active-class="''">
-          <n-icon><span class="nav-icon">📊</span></n-icon>
+        <NuxtLink to="/admin" class="nav-item">
+          <PhChartPie :size="20" weight="regular" class="nav-icon" />
           <span v-if="!collapsed" class="nav-label">Dashboard</span>
         </NuxtLink>
-        <NuxtLink to="/admin/projects" class="nav-item" active-class="nav-item--active">
-          <n-icon><span class="nav-icon">📁</span></n-icon>
+        <NuxtLink to="/admin/projects" class="nav-item">
+          <PhFolders :size="20" weight="regular" class="nav-icon" />
           <span v-if="!collapsed" class="nav-label">Projects</span>
         </NuxtLink>
         <a href="/docs" target="_blank" rel="noopener" class="nav-item">
-          <n-icon><span class="nav-icon">📚</span></n-icon>
+          <PhBookOpen :size="20" weight="regular" class="nav-icon" />
           <span v-if="!collapsed" class="nav-label">View docs site</span>
         </a>
       </div>
@@ -34,9 +34,8 @@
           :key="item.path"
           :to="`/admin/projects/${activeProject.id}${item.path}`"
           class="nav-item nav-item--sub"
-          :class="{ 'nav-item--active': isActiveProjectRoute(item.path, item.exact) }"
         >
-          <n-icon><span class="nav-icon">{{ item.icon }}</span></n-icon>
+          <component :is="item.icon" :size="18" weight="regular" class="nav-icon" />
           <span v-if="!collapsed" class="nav-label">{{ item.label }}</span>
         </NuxtLink>
       </div>
@@ -44,11 +43,12 @@
 
     <div class="admin-sidebar__footer">
       <NuxtLink to="/admin/profile" class="nav-item">
-        <n-icon><span class="nav-icon">👤</span></n-icon>
+        <PhUser :size="20" weight="regular" class="nav-icon" />
         <span v-if="!collapsed" class="nav-label">Profile</span>
       </NuxtLink>
       <button class="nav-item" @click="handleCollapse">
-        <n-icon><span class="nav-icon">{{ collapsed ? '▶' : '◀' }}</span></n-icon>
+        <PhCaretLeft v-if="!collapsed" :size="20" weight="regular" class="nav-icon" />
+        <PhCaretRight v-else :size="20" weight="regular" class="nav-icon" />
         <span v-if="!collapsed" class="nav-label">Collapse</span>
       </button>
     </div>
@@ -56,6 +56,24 @@
 </template>
 
 <script setup lang="ts">
+import {
+  PhChartPie,
+  PhFolders,
+  PhBookOpen,
+  PhUser,
+  PhCaretLeft,
+  PhCaretRight,
+  PhNote,
+  PhEye,
+  PhList,
+  PhImages,
+  PhCode,
+  PhGithubLogo,
+  PhUsers,
+  PhRocket,
+  PhGear,
+} from '@phosphor-icons/vue'
+
 const route = useRoute()
 const projects = ref<Array<{ id: string, name: string, slug: string }>>([])
 
@@ -66,15 +84,15 @@ function handleCollapse() {
 }
 
 const projectMenu = [
-  { path: '', icon: '📄', label: 'Pages', exact: true },
-  { path: '/preview', icon: '👁', label: 'Preview' },
-  { path: '/navigation', icon: '🧭', label: 'Navigation' },
-  { path: '/assets', icon: '🖼', label: 'Assets' },
-  { path: '/snippets', icon: '📋', label: 'Snippets' },
-  { path: '/github', icon: '🐙', label: 'GitHub' },
-  { path: '/members', icon: '👥', label: 'Members' },
-  { path: '/deployments', icon: '🚀', label: 'Deployments' },
-  { path: '/settings', icon: '⚙️', label: 'Settings' },
+  { path: '', icon: PhNote, label: 'Pages' },
+  { path: '/preview', icon: PhEye, label: 'Preview' },
+  { path: '/navigation', icon: PhList, label: 'Navigation' },
+  { path: '/assets', icon: PhImages, label: 'Assets' },
+  { path: '/snippets', icon: PhCode, label: 'Snippets' },
+  { path: '/github', icon: PhGithubLogo, label: 'GitHub' },
+  { path: '/members', icon: PhUsers, label: 'Members' },
+  { path: '/deployments', icon: PhRocket, label: 'Deployments' },
+  { path: '/settings', icon: PhGear, label: 'Settings' },
 ]
 
 const routeProjectId = computed(() => route.params.projectId as string | undefined)
@@ -87,12 +105,6 @@ const activeProject = computed(() => {
     slug: routeProjectId.value,
   }
 })
-
-function isActiveProjectRoute(itemPath: string, exact: boolean | undefined) {
-  const fullPath = `/admin/projects/${routeProjectId.value}${itemPath}`
-  if (exact) return route.path === fullPath
-  return route.path.startsWith(fullPath)
-}
 
 onMounted(async () => {
   try {
@@ -119,6 +131,7 @@ watch(() => routeProjectId.value, async (id) => {
   display: flex;
   flex-direction: column;
   transition: width 0.2s;
+  flex-shrink: 0;
 }
 
 .admin-sidebar--collapsed {
@@ -233,17 +246,17 @@ watch(() => routeProjectId.value, async (id) => {
   color: var(--text-primary);
 }
 
-.nav-item--active {
+.router-link-active.nav-item {
   background: var(--color-primary-50);
   color: var(--color-primary-600);
   font-weight: 500;
 }
 
 .nav-icon {
-  font-size: 16px;
-  width: 20px;
-  text-align: center;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .nav-label {
