@@ -1,12 +1,26 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 import { fileURLToPath } from 'node:url'
 import { resolve, dirname } from 'node:path'
+import mdx from '@mdx-js/rollup'
+import remarkFrontmatter from 'remark-frontmatter'
+import remarkMdxFrontmatter from 'remark-mdx-frontmatter'
+import remarkGfm from 'remark-gfm'
 
 const rootDir = dirname(fileURLToPath(import.meta.url))
 const workspaceRoot = resolve(rootDir, '..', '..')
 
+const mdxPlugin = mdx({
+  jsxImportSource: 'vue',
+  providerImportSource: '@mdx-js/vue',
+  remarkPlugins: [
+    remarkFrontmatter,
+    [remarkMdxFrontmatter, { name: 'frontmatter' }],
+    remarkGfm,
+  ],
+})
+
 export default defineNuxtConfig({
-  compatibilityDate: '2025-01-01',
+  compatibilityDate: '2026-06-02',
   devtools: { enabled: true },
 
   modules: [
@@ -50,6 +64,9 @@ export default defineNuxtConfig({
   },
 
   vite: {
+    plugins: [
+      mdxPlugin as unknown as never,
+    ],
     optimizeDeps: {
       include: ['vueuc', 'naive-ui'],
     },
