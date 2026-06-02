@@ -3,8 +3,11 @@
     <div class="admin-topbar__left">
       <n-breadcrumb>
         <n-breadcrumb-item @click="navigateTo('/admin')">Admin</n-breadcrumb-item>
-        <n-breadcrumb-item v-if="project" @click="navigateTo(`/admin/projects/${projectId}`)">
-          {{ project.name }}
+        <n-breadcrumb-item v-if="pageTitle" @click="navigateTo('/admin/pages')">
+          Pages
+        </n-breadcrumb-item>
+        <n-breadcrumb-item v-if="pageTitle">
+          {{ pageTitle }}
         </n-breadcrumb-item>
       </n-breadcrumb>
     </div>
@@ -34,8 +37,11 @@ const userInitials = computed(() => {
   return user.value?.name?.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) || 'U'
 })
 
-const projectId = useRoute().params.projectId as string | undefined
-const project = ref(null)
+const route = useRoute()
+const pageTitle = computed(() => {
+  const t = route.meta?.title
+  return typeof t === 'string' ? t : ''
+})
 
 const userMenuOptions = [
   { key: 'profile', label: 'Profile' },

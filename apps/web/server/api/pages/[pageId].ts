@@ -1,82 +1,66 @@
-import { eq } from '@halaman/database'
+import { eq, and } from '@halaman/database'
 import { db } from '@halaman/database'
-import { pages, pageVersions } from '@halaman/database/schema'
+import { pages } from '@halaman/database/schema'
 import { z } from 'zod'
 
-const updateSchema = z.object({
+const patchSchema = z.object({
   title: z.string().min(1).max(255).optional(),
   slug: z.string().min(1).max(255).regex(/^[a-z0-9-/]+$/).optional(),
-  description: z.string().optional(),
-  icon: z.string().optional(),
+  description: z.string().nullable().optional(),
+  icon: z.string().nullable().optional(),
   status: z.enum(['draft', 'published', 'archived']).optional(),
   contentJson: z.any().optional(),
   frontmatterJson: z.any().optional(),
-  seoTitle: z.string().optional(),
-  seoDescription: z.string().optional(),
-  ogImageUrl: z.string().optional(),
+  seoTitle: z.string().nullable().optional(),
+  seoDescription: z.string().nullable().optional(),
+  ogImageUrl: z.string().nullable().optional(),
   order: z.number().optional(),
   isHidden: z.boolean().optional(),
-})
-
-const draftSchema = z.object({
-  contentJson: z.any(),
-  title: z.string().optional(),
-  frontmatterJson: z.any().optional(),
+  locale: z.string().optional(),
+  parentId: z.string().uuid().nullable().optional(),
 })
 
 export default defineEventHandler(async (event) => {
   const { user } = await requireAuth(event)
   const pageId = getRouterParam(event, 'pageId')!
 
-  const [page] = await db
-    .select()
-    .from(pages)
-    .where(eq(pages.id, pageId))
-    .limit(1)
-
-  if (!page) throw createError({ statusCode: 404, message: 'Page not found' })
-
   if (event.method === 'GET') {
+    const [page] = await db
+      .select()
+      .from(pages)
+      .where(and(eq(pages.id, pageId), eq(pages.userId, user.id)))
+      .limit(1)
+    if (!page) throw createError({ statusCode: 404, message: 'Page not found' })
     return page
   }
 
   if (event.method === 'PATCH') {
-    const path = event.path
-
-    // Draft autosave endpoint
-    if (path.endsWith('/draft')) {
-      const body = await readBody(event)
-      const data = draftSchema.parse(body)
-
-      const [updated] = await db
-        .update(pages)
-        .set({
-          contentJson: data.contentJson,
-          ...(data.title ? { title: data.title } : {}),
-          ...(data.frontmatterJson ? { frontmatterJson: data.frontmatterJson } : {}),
-          updatedAt: new Date(),
-        })
-        .where(eq(pages.id, pageId))
-        .returning()
-
-      return updated
-    }
-
-    // General update
     const body = await readBody(event)
-    const data = updateSchema.parse(body)
+    const data = patchSchema.parse(body)
+
+    const updates: Record<string, unknown> = {
+      updatedAt: new Date().toISOString(),
+    }
+    for (const [k, v] of Object.entries(data)) {
+      if (v !== undefined) updates[k] = v
+    }
 
     const [updated] = await db
       .update(pages)
-      .set({ ...data, updatedAt: new Date() })
-      .where(eq(pages.id, pageId))
+      .set(updates)
+      .where(and(eq(pages.id, pageId), eq(pages.userId, user.id)))
       .returning()
 
+    if (!updated) throw createError({ statusCode: 404, message: 'Page not found' })
     return updated
   }
 
   if (event.method === 'DELETE') {
-    await db.delete(pages).where(eq(pages.id, pageId))
+    const result = await db
+      .delete(pages)
+      .where(and(eq(pages.id, pageId), eq(pages.userId, user.id)))
+      .returning({ id: pages.id })
+    if (result.length === 0) throw createError({ statusCode: 404, message: 'Page not found' })
     return { success: true }
   }
 

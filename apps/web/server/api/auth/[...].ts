@@ -1,9 +1,9 @@
-import { eq } from '@halaman/database'
-import { db } from '@halaman/database'
-import { users, sessions } from '@halaman/database/schema'
+import { sessions, users } from '@halaman/database/schema'
+import { db, eq } from '@halaman/database'
 import bcrypt from 'bcryptjs'
-const { compare, hash } = bcrypt
 import { z } from 'zod'
+
+const { compare, hash } = bcrypt
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -102,21 +102,21 @@ export default defineEventHandler(async (event) => {
       .values({ email, name, passwordHash })
       .returning()
 
-    const regSessionId = crypto.randomUUID()
-    const regExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    const sessionId = crypto.randomUUID()
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
 
     await db.insert(sessions).values({
-      id: regSessionId,
+      id: sessionId,
       userId: user.id,
-      expiresAt: regExpiresAt.toISOString(),
+      expiresAt: expiresAt.toISOString(),
     })
 
-    setCookie(event, 'halaman_session', regSessionId, {
+    setCookie(event, 'halaman_session', sessionId, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      expires: regExpiresAt,
+      expires: expiresAt,
     })
 
     return { success: true }

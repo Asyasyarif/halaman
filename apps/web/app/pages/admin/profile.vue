@@ -55,8 +55,6 @@ async function handleSave() {
       body: { name: form.name, avatarUrl: form.avatarUrl || null },
     })
     await refresh()
-  } catch (e: any) {
-    // TODO: surface error to user
   } finally {
     saving.value = false
   }

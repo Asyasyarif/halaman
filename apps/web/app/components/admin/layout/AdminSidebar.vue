@@ -14,30 +14,14 @@
           <PhChartPie :size="20" weight="regular" class="nav-icon" />
           <span v-if="!collapsed" class="nav-label">Dashboard</span>
         </NuxtLink>
-        <NuxtLink to="/admin/projects" class="nav-item">
-          <PhFolders :size="20" weight="regular" class="nav-icon" />
-          <span v-if="!collapsed" class="nav-label">Projects</span>
+        <NuxtLink to="/admin/pages" class="nav-item">
+          <PhNote :size="20" weight="regular" class="nav-icon" />
+          <span v-if="!collapsed" class="nav-label">Pages</span>
         </NuxtLink>
         <a href="/docs" target="_blank" rel="noopener" class="nav-item">
           <PhBookOpen :size="20" weight="regular" class="nav-icon" />
           <span v-if="!collapsed" class="nav-label">View docs site</span>
         </a>
-      </div>
-
-      <div v-if="activeProject" class="nav-section">
-        <div v-if="!collapsed" class="nav-section__label nav-section__label--project">
-          <span class="project-dot" />
-          <span class="project-name">{{ activeProject.name }}</span>
-        </div>
-        <NuxtLink
-          v-for="item in projectMenu"
-          :key="item.path"
-          :to="`/admin/projects/${activeProject.id}${item.path}`"
-          class="nav-item nav-item--sub"
-        >
-          <component :is="item.icon" :size="18" weight="regular" class="nav-icon" />
-          <span v-if="!collapsed" class="nav-label">{{ item.label }}</span>
-        </NuxtLink>
       </div>
     </nav>
 
@@ -58,68 +42,18 @@
 <script setup lang="ts">
 import {
   PhChartPie,
-  PhFolders,
+  PhNote,
   PhBookOpen,
   PhUser,
   PhCaretLeft,
   PhCaretRight,
-  PhNote,
-  PhEye,
-  PhList,
-  PhImages,
-  PhCode,
-  PhGithubLogo,
-  PhUsers,
-  PhRocket,
-  PhGear,
 } from '@phosphor-icons/vue'
-
-const route = useRoute()
-const projects = ref<Array<{ id: string, name: string, slug: string }>>([])
 
 const collapsed = ref(false)
 
 function handleCollapse() {
   collapsed.value = !collapsed.value
 }
-
-const projectMenu = [
-  { path: '', icon: PhNote, label: 'Pages' },
-  { path: '/preview', icon: PhEye, label: 'Preview' },
-  { path: '/navigation', icon: PhList, label: 'Navigation' },
-  { path: '/assets', icon: PhImages, label: 'Assets' },
-  { path: '/snippets', icon: PhCode, label: 'Snippets' },
-  { path: '/github', icon: PhGithubLogo, label: 'GitHub' },
-  { path: '/members', icon: PhUsers, label: 'Members' },
-  { path: '/deployments', icon: PhRocket, label: 'Deployments' },
-  { path: '/settings', icon: PhGear, label: 'Settings' },
-]
-
-const routeProjectId = computed(() => route.params.projectId as string | undefined)
-
-const activeProject = computed(() => {
-  if (!routeProjectId.value) return null
-  return projects.value.find((p) => p.id === routeProjectId.value) ?? {
-    id: routeProjectId.value,
-    name: 'Project',
-    slug: routeProjectId.value,
-  }
-})
-
-onMounted(async () => {
-  try {
-    projects.value = await $fetch('/api/projects')
-  } catch {}
-})
-
-watch(() => routeProjectId.value, async (id) => {
-  if (id && !projects.value.find((p) => p.id === id)) {
-    try {
-      const list = await $fetch('/api/projects')
-      projects.value = list
-    } catch {}
-  }
-})
 </script>
 
 <style scoped>
@@ -181,10 +115,9 @@ watch(() => routeProjectId.value, async (id) => {
   overflow-y: auto;
 }
 
-.nav-section + .nav-section {
-  margin-top: var(--space-4);
-  border-top: 1px solid var(--border-color);
-  padding-top: var(--space-3);
+.nav-section {
+  display: flex;
+  flex-direction: column;
 }
 
 .nav-section__label {
@@ -195,30 +128,6 @@ watch(() => routeProjectId.value, async (id) => {
   color: var(--text-tertiary);
   padding: 0 var(--space-4);
   margin-bottom: var(--space-2);
-}
-
-.nav-section__label--project {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  color: var(--text-primary);
-  text-transform: none;
-  letter-spacing: 0;
-  font-size: var(--font-size-sm);
-}
-
-.project-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--color-primary-500);
-  flex-shrink: 0;
-}
-
-.project-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .nav-item {
@@ -235,10 +144,6 @@ watch(() => routeProjectId.value, async (id) => {
   background: none;
   width: 100%;
   text-align: left;
-}
-
-.nav-item--sub {
-  padding-left: var(--space-8);
 }
 
 .nav-item:hover {

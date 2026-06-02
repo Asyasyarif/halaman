@@ -5,21 +5,27 @@
         <h1 class="dashboard-title">Dashboard</h1>
         <p class="dashboard-subtitle">Welcome back, {{ user?.name }}.</p>
       </div>
-      <n-button type="primary" @click="navigateTo('/admin/projects')">
-        {{ stats?.projects ? 'Open projects' : 'Create your first project' }}
+      <n-button type="primary" @click="navigateTo('/admin/pages')">
+        {{ stats?.pages ? 'Open pages' : 'Create your first page' }}
       </n-button>
     </div>
 
     <div class="dashboard-stats">
-      <n-card v-for="stat in statCards" :key="stat.label" size="small" class="stat-card">
-        <n-statistic :label="stat.label" :value="stat.value" />
+      <n-card size="small" class="stat-card">
+        <n-statistic label="Pages" :value="stats?.pages ?? 0" />
+      </n-card>
+      <n-card size="small" class="stat-card">
+        <n-statistic label="Published" :value="stats?.published ?? 0" />
+      </n-card>
+      <n-card size="small" class="stat-card">
+        <n-statistic label="Drafts" :value="stats?.drafts ?? 0" />
       </n-card>
     </div>
 
     <section class="dashboard-section">
       <div class="section-header">
         <h2 class="section-title">Recent pages</h2>
-        <NuxtLink v-if="stats?.recentPages?.length" to="/admin/projects" class="section-link">
+        <NuxtLink v-if="stats?.recentPages?.length" to="/admin/pages" class="section-link">
           View all
         </NuxtLink>
       </div>
@@ -28,12 +34,15 @@
 
       <div v-else-if="!stats?.recentPages?.length" class="empty-state">
         <p>No pages yet.</p>
-        <p class="empty-hint">Create a project, then add your first page to see it here.</p>
+        <p class="empty-hint">
+          Pages you create in the admin show up here, and at the public
+          <a href="/docs" target="_blank">/docs</a> URL.
+        </p>
       </div>
 
       <ul v-else class="recent-list">
         <li v-for="page in stats.recentPages" :key="page.id" class="recent-item">
-          <NuxtLink :to="`/admin/projects/${page.projectId}/editor/${page.id}`" class="recent-link">
+          <NuxtLink :to="`/admin/editor/${page.id}`" class="recent-link">
             <span class="recent-icon">
               <PhCheckCircle v-if="page.status === 'published'" :size="20" weight="regular" />
               <PhPencilSimple v-else-if="page.status === 'draft'" :size="20" weight="regular" />
@@ -42,7 +51,7 @@
             <span class="recent-body">
               <span class="recent-title">{{ page.title }}</span>
               <span class="recent-meta">
-                <span class="recent-project">{{ projectName(page.projectId) }}</span>
+                <span class="recent-slug">/{{ page.slug }}</span>
                 <span class="recent-dot">·</span>
                 <span class="recent-time">{{ formatRelative(page.updatedAt) }}</span>
               </span>
@@ -61,9 +70,7 @@ import { PhCheckCircle, PhPencilSimple, PhArchive } from '@phosphor-icons/vue'
 definePageMeta({ layout: 'admin', middleware: ['auth'] })
 
 const { user } = useAuth()
-const projects = ref<Array<{ id: string, name: string }>>([])
 const stats = ref<{
-  projects: number
   pages: number
   published: number
   drafts: number
@@ -73,22 +80,9 @@ const stats = ref<{
     slug: string
     status: string
     updatedAt: string
-    projectId: string
-    projectSlug: string
   }>
 } | null>(null)
 const loading = ref(true)
-
-const statCards = computed(() => [
-  { label: 'Projects', value: stats.value?.projects ?? 0 },
-  { label: 'Pages', value: stats.value?.pages ?? 0 },
-  { label: 'Published', value: stats.value?.published ?? 0 },
-  { label: 'Drafts', value: stats.value?.drafts ?? 0 },
-])
-
-function projectName(id: string) {
-  return projects.value.find((p) => p.id === id)?.name ?? 'Project'
-}
 
 function formatRelative(iso: string) {
   const diff = Date.now() - new Date(iso).getTime()
@@ -104,12 +98,21 @@ function formatRelative(iso: string) {
 
 onMounted(async () => {
   try {
-    const [statsRes, projectsRes] = await Promise.all([
-      $fetch<typeof stats.value>('/api/dashboard/stats'),
-      $fetch<typeof projects.value>('/api/projects'),
+    const [all] = await Promise.all([
+      $fetch<Array<{
+        id: string
+        title: string
+        slug: string
+        status: string
+        updatedAt: string
+      }>>('/api/pages'),
     ])
-    stats.value = statsRes
-    projects.value = projectsRes
+    stats.value = {
+      pages: all.length,
+      published: all.filter((p) => p.status === 'published').length,
+      drafts: all.filter((p) => p.status === 'draft').length,
+      recentPages: all.slice(0, 5),
+    }
   } catch {
   } finally {
     loading.value = false
@@ -185,6 +188,15 @@ onMounted(async () => {
   color: var(--text-secondary);
 }
 
+.empty-state a {
+  color: var(--color-primary-600);
+  text-decoration: none;
+}
+
+.empty-state a:hover {
+  text-decoration: underline;
+}
+
 .empty-hint {
   font-size: var(--font-size-sm);
   color: var(--text-tertiary);
@@ -224,8 +236,6 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
   flex-shrink: 0;
 }
 
@@ -253,6 +263,10 @@ onMounted(async () => {
   gap: var(--space-2);
 }
 
+.recent-slug {
+  font-family: var(--font-mono);
+}
+
 .recent-dot {
   opacity: 0.5;
 }
@@ -267,13 +281,13 @@ onMounted(async () => {
 }
 
 .recent-status--published {
-  background: var(--color-success-50, #ecfdf5);
-  color: var(--color-success-700, #047857);
+  background: #ecfdf5;
+  color: #047857;
 }
 
 .recent-status--draft {
-  background: var(--color-warning-50, #fffbeb);
-  color: var(--color-warning-700, #b45309);
+  background: #fffbeb;
+  color: #b45309;
 }
 
 .recent-status--archived {
