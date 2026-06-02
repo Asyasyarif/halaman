@@ -13,7 +13,7 @@
 </template>
 
 <script setup lang="ts">
-withDefaults(defineProps<{
+const props = withDefaults(defineProps<{
   variant?: 'info' | 'warning' | 'error' | 'success'
   title?: string
 }>(), {
