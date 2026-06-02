@@ -45,7 +45,9 @@ function toggleTheme() {
 }
 
 async function handleUserMenu(key: string) {
-  if (key === 'logout') {
+  if (key === 'profile') {
+    await navigateTo('/admin/profile')
+  } else if (key === 'logout') {
     await logout()
     navigateTo('/')
   }

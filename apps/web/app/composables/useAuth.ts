@@ -6,6 +6,7 @@ interface AuthState {
   login: (email: string, password: string) => Promise<void>
   register: (email: string, name: string, password: string) => Promise<void>
   logout: () => Promise<void>
+  refresh: () => Promise<void>
 }
 
 export function useAuth(): AuthState {
@@ -42,11 +43,16 @@ export function useAuth(): AuthState {
     user.value = null
   }
 
+  async function refresh() {
+    await fetchSession()
+  }
+
   return {
     user,
     isAuthenticated,
     login,
     register,
     logout,
+    refresh,
   }
 }
