@@ -1,0 +1,19 @@
+{
+  "name": "halaman",
+  "private": true,
+  "packageManager": "pnpm@9.15.4",
+  "scripts": {
+    "dev": "pnpm --filter @halaman/web dev",
+    "build": "pnpm --filter @halaman/web build",
+    "preview": "pnpm --filter @halaman/web preview",
+    "lint": "pnpm --filter @halaman/web lint",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck",
+    "db:migrate": "pnpm --filter @halaman/database db:migrate",
+    "db:generate": "pnpm --filter @halaman/database db:generate",
+    "db:studio": "pnpm --filter @halaman/database db:studio"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}
