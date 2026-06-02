@@ -70,12 +70,12 @@ export default defineEventHandler(async (event) => {
       expiresAt: expiresAt.toISOString(),
     })
 
-    setCookie(event, 'halaman_session', regSessionId, {
+    setCookie(event, 'halaman_session', sessionId, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      expires: regExpiresAt,
+      expires: expiresAt,
     })
 
     return { success: true }
@@ -111,12 +111,12 @@ export default defineEventHandler(async (event) => {
       expiresAt: regExpiresAt.toISOString(),
     })
 
-    setCookie(event, 'halaman_session', sessionId, {
+    setCookie(event, 'halaman_session', regSessionId, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      expires: expiresAt,
+      expires: regExpiresAt,
     })
 
     return { success: true }
