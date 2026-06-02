@@ -1,57 +1,90 @@
 <template>
   <aside class="docs-sidebar">
     <nav class="docs-sidebar__nav">
-      <div v-for="section in sections" :key="section.title" class="sidebar-section">
+      <div v-for="group in groups" :key="group.label" class="sidebar-section">
         <button
-          v-if="section.children"
+          v-if="group.children.length"
           class="sidebar-section__header"
-          @click="toggleSection(section.title)"
+          @click="toggleGroup(group.label)"
         >
-          <span class="sidebar-section__icon">{{ expandedSections[section.title] ? '▾' : '▸' }}</span>
-          <span>{{ section.title }}</span>
+          <span class="sidebar-section__icon">{{ expandedGroups[group.label] ? '▾' : '▸' }}</span>
+          <span>{{ group.label }}</span>
         </button>
-        <NuxtLink
-          v-else
-          :to="section.to"
-          class="sidebar-link"
-          :class="{ 'sidebar-link--active': section.active }"
-        >
-          {{ section.title }}
-        </NuxtLink>
 
-        <div v-if="section.children && expandedSections[section.title]" class="sidebar-section__children">
+        <div v-if="group.children.length && expandedGroups[group.label]" class="sidebar-section__children">
           <NuxtLink
-            v-for="child in section.children"
-            :key="child.to"
-            :to="child.to"
+            v-for="child in group.children"
+            :key="child.path"
+            :to="child.path"
             class="sidebar-link sidebar-link--child"
-            :class="{ 'sidebar-link--active': child.active }"
+            :class="{ 'sidebar-link--active': isActive(child.path) }"
           >
             {{ child.title }}
           </NuxtLink>
         </div>
+
+        <NuxtLink
+          v-if="!group.children.length"
+          :to="group.path"
+          class="sidebar-link"
+          :class="{ 'sidebar-link--active': isActive(group.path) }"
+        >
+          {{ group.label }}
+        </NuxtLink>
       </div>
     </nav>
   </aside>
 </template>
 
 <script setup lang="ts">
-interface SidebarItem {
-  title: string
-  to?: string
-  active?: boolean
-  children?: SidebarItem[]
+interface SidebarGroup {
+  label: string
+  path: string
+  children: { title: string; path: string }[]
 }
 
-defineProps<{
-  sections?: SidebarItem[]
-}>()
+const nav = useDocsNav()
+const route = useRoute()
 
-const expandedSections = ref<Record<string, boolean>>({})
+const groups = computed<SidebarGroup[]>(() => {
+  const pages = nav.value
+  const ungrouped: SidebarGroup = { label: 'Documentation', path: '/docs', children: [] }
+  const grouped = new Map<string, SidebarGroup>()
 
-function toggleSection(title: string) {
-  expandedSections.value[title] = !expandedSections.value[title]
+  for (const page of pages) {
+    if (page.slug === '') {
+      ungrouped.path = page.path
+      continue
+    }
+    if (!page.group) {
+      ungrouped.children.push({ title: page.title, path: page.path })
+      continue
+    }
+    if (!grouped.has(page.group)) {
+      grouped.set(page.group, { label: page.group, path: page.path, children: [] })
+    }
+    grouped.get(page.group)!.children.push({ title: page.title, path: page.path })
+  }
+
+  return [ungrouped, ...grouped.values()]
+})
+
+const expandedGroups = ref<Record<string, boolean>>({})
+
+function toggleGroup(label: string) {
+  expandedGroups.value[label] = !expandedGroups.value[label]
 }
+
+function isActive(path: string): boolean {
+  return route.path === path
+}
+
+watchEffect(() => {
+  const current = nav.value.find(p => p.path === route.path)
+  if (current?.group) {
+    expandedGroups.value[current.group] = true
+  }
+})
 </script>
 
 <style scoped>

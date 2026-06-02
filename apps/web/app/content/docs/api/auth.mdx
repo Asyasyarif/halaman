@@ -1,0 +1,52 @@
+---
+title: Authentication API
+description: Endpoints for user signup, login, session refresh, and logout.
+order: 10
+group: API
+---
+
+# {frontmatter.title}
+
+{frontmatter.description}
+
+## `POST /api/auth/register`
+
+Create a new account.
+
+<CodeBlock language="ts">
+{`const res = await $fetch('/api/auth/register', {
+  method: 'POST',
+  body: {
+    email: 'founder@example.com',
+    password: 'correct-horse-battery-staple',
+    name: 'Ada Lovelace',
+  },
+})`}
+</CodeBlock>
+
+### Request body
+
+| Field    | Type   | Required | Description             |
+| -------- | ------ | -------- | ----------------------- |
+| `email`  | string | yes      | Must be a valid email.  |
+| `password` | string | yes    | Min 12 characters.      |
+| `name`   | string | no       | Display name.           |
+
+<Callout variant="warning" title="Rate limited">
+  5 requests per minute per IP. The response includes a `Retry-After` header on 429.
+</Callout>
+
+## `POST /api/auth/login`
+
+Exchange credentials for a session cookie.
+
+<CodeBlock language="ts">
+{`await $fetch('/api/auth/login', {
+  method: 'POST',
+  body: { email, password },
+})`}
+</CodeBlock>
+
+## `POST /api/auth/logout`
+
+Invalidates the current session. Idempotent.

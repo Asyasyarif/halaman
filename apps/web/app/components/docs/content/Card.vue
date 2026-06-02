@@ -1,18 +1,22 @@
 <template>
-  <NuxtLink :to="link" class="card">
+  <component :is="link ? NuxtLinkComponent : 'div'" :to="link" class="card">
     <div v-if="icon" class="card__icon">{{ icon }}</div>
     <strong class="card__title">{{ title }}</strong>
     <p v-if="description" class="card__description">{{ description }}</p>
-  </NuxtLink>
+  </component>
 </template>
 
 <script setup lang="ts">
+import { NuxtLink } from '#components'
+
 defineProps<{
   title: string
   description?: string
   icon?: string
-  link: string
+  link?: string
 }>()
+
+const NuxtLinkComponent = NuxtLink
 </script>
 
 <style scoped>

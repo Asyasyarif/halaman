@@ -1,46 +1,37 @@
 <template>
-  <div class="docs-slug-page">
-    <DocsContent :page="page" :prev-page="prevNav" :next-page="nextNav">
-      <div v-if="page?.contentJson" class="rendered-content">
-        <!-- Render content via docs-renderer -->
-        <template v-for="node in renderedNodes" :key="node.id">
-          <component :is="getComponent(node.type)" v-bind="node.props">
-            {{ node.text }}
-          </component>
-        </template>
-      </div>
-      <div v-else class="empty-page">
-        <p>This page is empty. Start writing content in the admin editor.</p>
-      </div>
+  <div v-if="page" class="docs-slug">
+    <DocsContent
+      :page="{ title: page.title, description: page.description }"
+      :prev-page="prevPage ?? undefined"
+      :next-page="nextPage ?? undefined"
+    >
+      <component :is="Content" />
+    </DocsContent>
+  </div>
+  <div v-else class="docs-slug__missing">
+    <DocsContent :page="{ title: 'Page not found' }">
+      <p>
+        No MDX file exists at <code>app/content/docs/{{ slug || 'index' }}.mdx</code>.
+      </p>
+      <p>
+        <NuxtLink to="/docs">Back to the documentation home</NuxtLink>
+      </p>
     </DocsContent>
   </div>
 </template>
 
 <script setup lang="ts">
 const route = useRoute()
-const slug = (route.params.slug as string[])?.join('/') || ''
+const slug = computed(() => (route.params.slug as string[] | undefined)?.filter(Boolean).join('/') ?? '')
+const { current, prev, next } = useDocsPage(slug.value)
+const page = current
+const Content = useDocsContent(slug.value)
+const prevPage = computed(() => prev.value ? { title: prev.value.title, to: prev.value.path } : null)
+const nextPage = computed(() => next.value ? { title: next.value.title, to: next.value.path } : null)
 
-const page = ref<any>(null)
-const prevNav = computed(() => undefined)
-const nextNav = computed(() => undefined)
-const renderedNodes = computed(() => [])
-
-function getComponent(type: string) {
-  const map: Record<string, string> = {
-    heading: 'h1',
-    paragraph: 'p',
-  }
-  return map[type] || 'div'
-}
-
-onMounted(async () => {
-  // In production, this would fetch the page by slug from the API
-  // For now, it renders the layout shell
-  page.value = {
-    title: slug.split('/').pop()?.replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()) || 'Page',
-    description: '',
-    contentJson: null,
-  }
+useHead({
+  title: () => page.value?.title ?? 'Page not found',
+  meta: [{ name: 'description', content: () => page.value?.description ?? '' }],
 })
 
 definePageMeta({ layout: 'docs' })

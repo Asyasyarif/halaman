@@ -1,32 +1,40 @@
 <template>
   <div class="steps">
-    <div
-      v-for="(step, index) in steps"
-      :key="index"
-      class="step"
-    >
+    <div v-for="(item, index) in items" :key="index" class="step">
       <div class="step__marker">
         <span class="step__number">{{ index + 1 }}</span>
-        <div v-if="index < steps.length - 1" class="step__line" />
+        <div v-if="index < items.length - 1" class="step__line" />
       </div>
       <div class="step__body">
-        <strong v-if="step.title" class="step__title">{{ step.title }}</strong>
-        <div class="step__content">
-          <slot :name="`step-${index}`" :step="step" />
-        </div>
+        <component :is="item.node" />
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-interface Step {
-  title?: string
-}
+import { Fragment, useSlots } from 'vue'
 
-defineProps<{
-  steps: Step[]
-}>()
+const slots = useSlots()
+
+const items = computed(() => {
+  const collect = (vnodes: any[]): any[] => {
+    const out: any[] = []
+    for (const vnode of vnodes) {
+      if (!vnode) continue
+      if (vnode.type === Fragment) {
+        out.push(...collect(vnode.children ?? []))
+      } else if (typeof vnode.type !== 'string') {
+        const props = (vnode.props ?? {}) as { title?: string }
+        if (props.title !== undefined) {
+          out.push({ title: props.title, node: vnode })
+        }
+      }
+    }
+    return out
+  }
+  return collect(slots.default?.() ?? [])
+})
 </script>
 
 <style scoped>
@@ -72,17 +80,7 @@ defineProps<{
 }
 
 .step__body {
+  flex: 1;
   padding-bottom: var(--space-4);
-}
-
-.step__title {
-  display: block;
-  font-size: var(--font-size-base);
-  margin-bottom: var(--space-2);
-}
-
-.step__content {
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
 }
 </style>

@@ -2,29 +2,44 @@
   <div class="tabs">
     <div class="tabs__header">
       <button
-        v-for="(tab, index) in tabs"
+        v-for="(item, index) in items"
         :key="index"
         class="tabs__tab"
         :class="{ 'tabs__tab--active': activeIndex === index }"
         @click="activeIndex = index"
       >
-        {{ tab.label }}
+        {{ item.label }}
       </button>
     </div>
     <div class="tabs__panel">
-      <slot :name="`tab-${activeIndex}`" :tab="tabs[activeIndex]" />
+      <component :is="items[activeIndex]?.node" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-interface Tab {
-  label: string
-}
+import { Fragment, useSlots } from 'vue'
 
-defineProps<{
-  tabs: Tab[]
-}>()
+const slots = useSlots()
+
+const items = computed(() => {
+  const collect = (vnodes: any[]): any[] => {
+    const out: any[] = []
+    for (const vnode of vnodes) {
+      if (!vnode) continue
+      if (vnode.type === Fragment) {
+        out.push(...collect(vnode.children ?? []))
+      } else if (typeof vnode.type !== 'string') {
+        const props = (vnode.props ?? {}) as { label?: string }
+        if (props.label !== undefined) {
+          out.push({ label: props.label, node: vnode })
+        }
+      }
+    }
+    return out
+  }
+  return collect(slots.default?.() ?? [])
+})
 
 const activeIndex = ref(0)
 </script>

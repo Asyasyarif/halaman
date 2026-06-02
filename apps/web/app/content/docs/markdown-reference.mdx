@@ -1,0 +1,51 @@
+---
+title: Markdown Reference
+description: Every component and shortcode available inside MDX pages.
+order: 2
+group: Guides
+---
+
+# {frontmatter.title}
+
+A live reference for the components exposed to MDX via the global `MDXProvider`.
+
+## Callouts
+
+<Callout variant="info">Default info callout.</Callout>
+<Callout variant="success" title="Success">Use this for confirmations.</Callout>
+<Callout variant="warning" title="Warning">Heads up, but not blocking.</Callout>
+<Callout variant="error" title="Error">Something went wrong.</Callout>
+
+## Code blocks
+
+<CodeBlock language="ts">
+{`import { defineNuxtConfig } from 'nuxt/config'
+
+export default defineNuxtConfig({
+  compatibilityDate: '2026-06-02',
+  devtools: { enabled: true },
+})`}
+</CodeBlock>
+
+## Cards
+
+<CardGroup>
+  <Card title="Fast" icon="⚡">Compiled at build time.</Card>
+  <Card title="Typed" icon="🧠">Frontmatter is exported.</Card>
+  <Card title="Composable" icon="🧩">Inject any Vue component.</Card>
+</CardGroup>
+
+## Tabs
+
+<Tabs>
+  <Tab label="pnpm">pnpm add -F @halaman/web @mdx-js/rollup</Tab>
+  <Tab label="npm">npm i -w @halaman/web @mdx-js/rollup</Tab>
+  <Tab label="yarn">yarn workspace @halaman/web add @mdx-js/rollup</Tab>
+</Tabs>
+
+## Accordion
+
+<Accordion title="Why MDX and not Content?">
+  MDX gives you full JSX inside prose and ships with the Vue 3 runtime we already use.
+  No additional module to maintain, no MDC dialect to learn.
+</Accordion>
