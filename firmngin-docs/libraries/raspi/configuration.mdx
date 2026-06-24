@@ -1,0 +1,107 @@
+---
+title: "Configuration"
+description: "Configure ClientConfig, KeysConfig, TLS modes, and connection settings"
+---
+
+The Firmngin Python SDK uses two configuration models: `KeysConfig` for device identity and cryptographic material, and `ClientConfig` for runtime behavior.
+
+## KeysConfig
+
+Load device credentials from a `keys.json` file downloaded from the Firmngin dashboard.
+
+```python
+from firmngin import KeysConfig
+
+keys = KeysConfig.from_file("keys.json")
+```
+
+### Fields
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `device_id` | `str` | Unique device identifier from Firmngin. |
+| `device_key` | `str` | Device authentication key. |
+| `decryptor` | `str` | Hex-encoded AES key for E2EE message encryption. |
+| `validation_mode` | `str` | `"ca"`, `"pin"`, or `"both"`. |
+| `ca_cert` | `str \| None` | CA certificate PEM for TLS validation. |
+| `service_ca_cert` | `str` | Service CA certificate PEM. |
+| `client_cert` | `str \| None` | Client certificate PEM for mTLS. |
+| `private_key` | `str \| None` | Private key PEM for mTLS. |
+| `fingerprint_sha256` | `str \| None` | SHA-256 fingerprint for pin validation. |
+
+### Load from environment variables
+
+```python
+keys = KeysConfig.from_env(prefix="FIRMNGIN_")
+```
+
+This reads `FIRMNGIN_DEVICE_ID`, `FIRMNGIN_DEVICE_KEY`, and so on.
+
+## ClientConfig
+
+Runtime configuration for `FirmnginClient`.
+
+```python
+from firmngin import ClientConfig, KeysConfig
+
+config = ClientConfig(
+    keys=KeysConfig.from_file("keys.json"),
+)
+```
+
+### Fields
+
+| Field | Default | Description |
+| --- | --- | --- |
+| `keys` | (required) | `KeysConfig` instance. |
+| `api_base_url` | `"https://api.firmngin.dev/api/v1"` | Firmngin API base URL. |
+| `queue_path` | `None` | Path for offline queue persistence. Set to enable offline queuing. |
+| `ntp_server` | `"pool.ntp.org"` | NTP server for time synchronization. |
+| `connect_timeout_seconds` | `10.0` | MQTT connection timeout. |
+| `keepalive_seconds` | `60` | MQTT keepalive interval. |
+| `reconnect_initial_delay_seconds` | `1.0` | Initial delay before reconnect attempt. |
+| `reconnect_max_delay_seconds` | `30.0` | Maximum delay between reconnect attempts. |
+| `reconnect_max_attempts` | `None` | Maximum reconnect attempts. `None` means unlimited. |
+| `insecure` | `False` | Skip TLS certificate validation. Not recommended for production. |
+| `mtls` | `True` | Enable mutual TLS. Requires `client_cert` and `private_key`. |
+
+## TLS modes
+
+| Mode | Use case |
+| --- | --- |
+| CA certificate (`"ca"`) | Recommended for production. Strongest validation. |
+| Fingerprint (`"pin"`) | Lighter, but must be updated when server certificate changes. |
+| Both (`"both"`) | Default. Uses both CA and fingerprint validation. |
+
+## Offline queue
+
+Enable the offline queue to persist MQTT messages when the connection is temporarily unavailable. Messages are drained when the connection is re-established.
+
+```python
+config = ClientConfig(
+    keys=KeysConfig.from_file("keys.json"),
+    queue_path="/var/lib/firmngin/queue",
+)
+```
+
+## Debug logging
+
+Enable debug logging to diagnose runtime behavior:
+
+```python
+async with FirmnginClient(config) as client:
+    client.set_debug(True)
+    await client.connect()
+```
+
+## Firmware metadata
+
+Set firmware version and target board information for device identification:
+
+```python
+client.set_firmware_info(
+    version="1.0.0",
+    target_board="RASPBERRY_PI",
+    target_model="Raspberry Pi 4 Model B",
+)
+```

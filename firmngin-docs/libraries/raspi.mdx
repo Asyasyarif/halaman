@@ -1,0 +1,89 @@
+---
+title: "Python SDK"
+description: "Firmware integration for Raspberry Pi and Linux-based devices using Python"
+---
+
+Use the Firmngin Python SDK to connect Raspberry Pi and other Linux-based devices to Firmngin. The SDK covers secure device connection, entity state updates, command handling, image upload, GPS location updates, and monetization flows.
+
+## When to use it
+
+Use this SDK for:
+
+- Raspberry Pi devices running Linux.
+- Python-based device integrations and server-side tooling.
+- Devices that publish structured entity values such as temperature, relay state, energy, or GPS position.
+- Devices that receive entity commands from the dashboard.
+- Devices that need secure mTLS connection using downloaded device credentials.
+- Firmware that participates in paid session, payment, or verification flows.
+- Integration tests and prototyping before moving to Arduino firmware.
+
+## Core responsibilities
+
+The application should connect to the network, authenticate with device credentials, keep the Firmngin connection alive, send entity state updates, receive entity commands, and handle optional flows such as location, image upload, and monetization events.
+
+## Main capabilities
+
+| Capability | What it does |
+| --- | --- |
+| Secure connection | Uses device credentials and mTLS for platform connection. |
+| Entity state | Sends single or batch entity values from device to Firmngin. |
+| Entity commands | Receives dashboard commands and routes them to the correct handler. |
+| Typed callbacks | Provides typed objects for payments, verifications, device state, init, and active sessions. |
+| Location | Sends GPS coordinates through a builder-style API. |
+| Image upload | Uploads camera/image data and links it to an entity key. |
+| Offline queue | Queues updates when the connection is temporarily unavailable. |
+
+## Minimal lifecycle
+
+Most applications follow this shape:
+
+```python
+import asyncio
+
+from firmngin import ClientConfig, Entity, Event, FirmnginClient, Init, KeysConfig, Payment
+
+
+async def handle_payment(payment: Payment) -> None:
+    if payment.is_success:
+        print("paid:", payment.order_id)
+
+
+async def handle_init(init: Init) -> None:
+    print("merchant status:", init.merchant_status)
+
+
+async def main() -> None:
+    config = ClientConfig(keys=KeysConfig.from_file("keys.json"))
+    relay = Entity("relay")
+
+    async with FirmnginClient(config) as client:
+        client.on(Event.PAYMENT, handle_payment)
+        client.on(Event.INIT, handle_init)
+
+        await client.connect()
+        await client.request_init()
+        await client.push_entity(relay, "on")
+        await client.run()
+
+
+asyncio.run(main())
+```
+
+## Sync adapter
+
+For scripts that cannot manage an event loop, use `SyncFirmnginClient`:
+
+```python
+from firmngin import ClientConfig, Entity, KeysConfig, SyncFirmnginClient
+
+config = ClientConfig(keys=KeysConfig.from_file("keys.json"))
+relay = Entity("relay")
+client = SyncFirmnginClient(config)
+
+client.connect()
+client.push_entity(relay, "off")
+```
+
+## Source repository
+
+The source SDK is available at [firmngin/firmngin-sdk-python](https://github.com/firmngin/firmngin-sdk-python).
