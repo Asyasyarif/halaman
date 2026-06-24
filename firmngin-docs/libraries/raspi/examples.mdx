@@ -1,0 +1,51 @@
+---
+title: "Examples"
+description: "Available Firmngin Python SDK examples and when to use each one"
+---
+
+The Firmngin Python SDK repository includes example scripts for common device patterns. Start with the smallest example that matches your device, then add features only when needed.
+
+## Setup pattern
+
+Most examples follow this setup:
+
+- Import `firmngin` components.
+- Place `keys.json` next to the script.
+- Configure network connectivity.
+- Run the script with `python example.py`.
+
+## Example list
+
+| Example | Use it for |
+| --- | --- |
+| `async_basic.py` | First Firmngin connection with async client, payment and init handlers. |
+| `sync_basic.py` | Synchronous-style connection for scripts without event loop management. |
+| `entity_publish.py` | Sending single entity values from device. |
+| `entity_command.py` | Receiving entity commands from Firmngin and routing by entity key. |
+| `batch_and_location.py` | Sending batch entity values and GPS location updates. |
+| `payment_events.py` | Handling pending and successful payment events separately. |
+| `device_status_events.py` | Reacting to device state changes (idle, maintenance, active service). |
+| `pin_verification_events.py` | Handling PIN display and verification result events. |
+| `active_session_events.py` | Managing active paid sessions from device logic. |
+| `async_with_image_upload.py` | Uploading camera images to Firmngin. |
+| `flask_device_dashboard/` | Flask-based device dashboard web application. |
+
+## Async vs sync
+
+Most examples use the async client (`FirmnginClient`) for production use. The sync adapter (`SyncFirmnginClient`) is available for quick scripts and testing:
+
+```python
+# Async (recommended)
+async with FirmnginClient(config) as client:
+    await client.connect()
+    await client.run()
+
+# Sync (simple scripts)
+client = SyncFirmnginClient(config)
+client.connect()
+client.push_entity(relay, "on")
+```
+
+## Repository
+
+Open the source examples in [firmngin/firmngin-sdk-python](https://github.com/firmngin/firmngin-sdk-python/tree/main/examples).
